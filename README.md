@@ -8,7 +8,7 @@ This repository exposes a reusable workflow (`claude-issue.yml`) that, when call
 
 1. Creates a branch named `feature/issue-{id}-{slug}` from main.
 2. Runs Claude Code in headless mode with the issue context as prompt.
-3. Commits any changes produced by Claude Code.
+3. Commits any changes produced by Claude Code, excluding `.github/workflows/` files.
 4. Opens a pull request referencing the issue with the label `awaiting-review`.
 5. Posts a comment on the issue with the pull request URL.
 
@@ -38,6 +38,12 @@ on:
   issues:
     types: [labeled]
 
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  workflows: write
+
 jobs:
   claude:
     if: github.event.label.name == 'claude'
@@ -49,24 +55,37 @@ jobs:
       issue_labels: ${{ toJson(github.event.issue.labels.*.name) }}
     secrets:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GH_PAT: ${{ secrets.GH_PAT }}
 ```
 
-### 2. Add the ANTHROPIC_API_KEY secret
+### 2. Add secrets
 
-In your project repository, go to **Settings > Secrets and variables > Actions** and create a secret:
+In your project repository, go to **Settings > Secrets and variables > Actions** and create two secrets:
 
 | Name | Value |
 |---|---|
 | `ANTHROPIC_API_KEY` | Your Anthropic API key |
+| `GH_PAT` | A GitHub Personal Access Token (see scopes below) |
+
+#### Required GH_PAT scopes
+
+The PAT is required because the default `GITHUB_TOKEN` cannot push to `.github/workflows/` files or trigger other workflows. Create it at **github.com > Settings > Developer settings > Personal access tokens > Fine-grained tokens** with the following repository permissions on the target project repo:
+
+| Permission | Access |
+|---|---|
+| Contents | Read and write |
+| Pull requests | Read and write |
+| Issues | Read and write |
+| Workflows | Read and write |
 
 ### 3. Create the `claude` label
 
 In your project repository, go to **Issues > Labels** and create a label named exactly `claude`.
 
-Once both are in place, adding the `claude` label to any open issue will trigger the workflow.
+Once both secrets and the label are in place, adding the `claude` label to any open issue will trigger the workflow.
 
 ## Requirements
 
-- The calling repository must grant the workflow `contents: write`, `pull-requests: write`, and `issues: write` permissions.
+- The calling repository must declare `permissions: {contents: write, pull-requests: write, issues: write, workflows: write}` at the workflow level.
 - The default branch must be named `main`.
 - The `awaiting-review` label must exist in the calling repository if you want the pull request to be tagged automatically (the workflow will not fail if it is missing, the label will simply be skipped).

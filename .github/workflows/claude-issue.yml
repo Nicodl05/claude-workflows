@@ -25,6 +25,9 @@ on:
       ANTHROPIC_API_KEY:
         description: Anthropic API key for Claude Code
         required: true
+      GH_PAT:
+        description: Personal access token with repo, workflow, issues, and pull-requests scopes
+        required: true
 
 env:
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -44,6 +47,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -124,15 +128,22 @@ jobs:
       - name: Run Claude Code
         env:
           BRANCH: ${{ steps.branch.outputs.name }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           claude --headless \
             --allowedTools "Bash,Read,Edit,Write" \
             --print "$(cat /tmp/claude-prompt.txt)"
 
+      - name: Protect workflow files
+        run: |
+          git reset HEAD .github/workflows/ 2>/dev/null || true
+          git checkout -- .github/workflows/ 2>/dev/null || true
+
       - name: Commit and push changes
         env:
           BRANCH: ${{ steps.branch.outputs.name }}
           ISSUE_NUMBER: ${{ inputs.issue_number }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -149,7 +160,7 @@ jobs:
       - name: Open pull request
         id: pr
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           BRANCH: ${{ steps.branch.outputs.name }}
           ISSUE_NUMBER: ${{ inputs.issue_number }}
           ISSUE_TITLE: ${{ inputs.issue_title }}
@@ -170,7 +181,7 @@ jobs:
 
       - name: Comment on issue
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           ISSUE_NUMBER: ${{ inputs.issue_number }}
           PR_URL: ${{ steps.pr.outputs.url }}
         run: |
