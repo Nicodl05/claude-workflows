@@ -32,7 +32,7 @@ env:
 
 jobs:
   handle-issue:
-    name: Handle issue #${{ inputs.issue_number }}
+    name: Handle issue
     runs-on: ubuntu-latest
     permissions:
       contents: write

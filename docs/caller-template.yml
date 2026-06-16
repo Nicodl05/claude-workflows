@@ -4,13 +4,14 @@ on:
   issues:
     types: [labeled]
 
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
 jobs:
   claude:
     if: github.event.label.name == 'claude'
-    permissions:
-      contents: write
-      pull-requests: write
-      issues: write
     uses: Nicodl05/claude-workflows/.github/workflows/claude-issue.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
