@@ -130,8 +130,9 @@ jobs:
           BRANCH: ${{ steps.branch.outputs.name }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          claude --headless \
+          claude \
             --allowedTools "Bash,Read,Edit,Write" \
+            --dangerously-skip-permissions \
             --print "$(cat /tmp/claude-prompt.txt)"
 
       - name: Protect workflow files
