@@ -1,0 +1,22 @@
+name: Mistral Issue Handler
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  mistral:
+    if: github.event.label.name == 'mistral'
+    uses: Nicodl05/ai-agent-workflows/.github/workflows/mistral-issue.yml@main
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      issue_title: ${{ github.event.issue.title }}
+      issue_body: ${{ github.event.issue.body || '' }}
+    secrets:
+      AI_API_KEY: ${{ secrets.AI_API_KEY }}
+      GH_PAT: ${{ secrets.GH_PAT }}
