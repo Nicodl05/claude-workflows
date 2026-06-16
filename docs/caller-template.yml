@@ -1,0 +1,17 @@
+name: Claude Issue Handler
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  claude:
+    if: github.event.label.name == 'claude'
+    uses: Nicodl05/claude-workflows/.github/workflows/claude-issue.yml@main
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      issue_title: ${{ github.event.issue.title }}
+      issue_body: ${{ github.event.issue.body || '' }}
+      issue_labels: ${{ toJson(github.event.issue.labels.*.name) }}
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
